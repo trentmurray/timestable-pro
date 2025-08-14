@@ -62,6 +62,7 @@ const bullets = ref<Bullet[]>([]);
 
 let loop: number | null = null;
 let gameOver = false;
+let canvasSize = 520; // logical square size (responsive)
 
 function start(){
   score.value = 0; level.value = 1; fallSpeed.value = 1.2; wrongCount.value = 3; bullets.value = []; enemies.value = [];
@@ -70,6 +71,9 @@ function start(){
   spawnWave();
   if(loop) cancelAnimationFrame(loop);
   gameOver=false; last=0; accumulator=0;
+  // position player based on current canvas size
+  player.value.x = Math.max(8, Math.floor((canvasSize - player.value.w)/2));
+  player.value.y = Math.max(20, canvasSize - 30);
   loop = requestAnimationFrame(frame);
 }
 
@@ -101,7 +105,7 @@ function spawnWave(){
   // Lay out evenly across the top to avoid overlap, sizing based on count
   const n = arr.length;
   const margin = 20; // side margin
-  const available = 520 - margin*2;
+  const available = canvasSize - margin*2;
   const slot = Math.floor(available / n);
   const w = Math.max(40, Math.min(90, slot - 12));
   const h = Math.max(22, Math.floor(w * 0.5));
@@ -139,7 +143,7 @@ function frame(ts:number){
 function update(){
   // continuous player movement
   if(keys.value.left)  player.value.x = Math.max(8, player.value.x - player.value.speed);
-  if(keys.value.right) player.value.x = Math.min(520 - player.value.w - 8, player.value.x + player.value.speed);
+  if(keys.value.right) player.value.x = Math.min(canvasSize - player.value.w - 8, player.value.x + player.value.speed);
 
   // move bullets (mutate in place and compact array to reduce churn)
   for(let i=0;i<bullets.value.length;i++) bullets.value[i].y += bullets.value[i].vy;
@@ -168,7 +172,7 @@ function update(){
   // check bottom conditions
   for(let idx=0; idx<enemies.value.length; idx++){
     const e = enemies.value[idx];
-    if(e.y + e.h >= 520){
+    if(e.y + e.h >= canvasSize){
       if(e.correct){
         // round complete
         score.value += 10;
@@ -188,10 +192,10 @@ function update(){
 }
 
 function draw(){
-  const c = ctx.value!; c.clearRect(0,0,520,520);
+  const c = ctx.value!; c.clearRect(0,0,c.canvas.width,c.canvas.height);
   // stars background
   c.fillStyle = 'rgba(255,255,255,0.08)';
-  for(let i=0;i<40;i++){ c.fillRect((i*37)%520, (i*91)%520, 2, 2); }
+  for(let i=0;i<40;i++){ c.fillRect((i*37)%canvasSize, (i*91)%canvasSize, 2, 2); }
 
   // player
   c.fillStyle = '#93c5fd';
@@ -212,6 +216,18 @@ function draw(){
   // bullets
   c.fillStyle = '#fbbf24';
   bullets.value.forEach(b=>{ c.fillRect(b.x-2, b.y-10, 4, 10); });
+
+  if(gameOver){
+    c.fillStyle = 'rgba(0,0,0,0.55)';
+    c.fillRect(0,0,canvasSize,canvasSize);
+    c.fillStyle = '#ffffff';
+    c.font = '900 28px system-ui';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText('Oh no :(', canvasSize/2, canvasSize/2 - 16);
+    c.font = '700 18px system-ui';
+    c.fillText(`Your score: ${score.value}`, canvasSize/2, canvasSize/2 + 12);
+  }
 }
 
 function end(){
@@ -219,7 +235,8 @@ function end(){
   gameOver = true;
   if(loop){ cancelAnimationFrame(loop); loop=null; }
   try{ user.submitInvadersScore(score.value); } catch {}
-  setTimeout(()=>{ alert(`Game over! Score ${score.value}`); }, 0);
+  // draw overlay once
+  draw();
 }
 
 function onKeyDown(e: KeyboardEvent){
@@ -245,7 +262,7 @@ function onTouchEnd(e: TouchEvent){ if(!loop || gameOver) return; e.preventDefau
 function handleTouch(x:number, _y:number){
   const rect = canvas.value!.getBoundingClientRect();
   const cx = x - rect.left;
-  player.value.x = Math.max(8, Math.min(520 - player.value.w - 8, cx - player.value.w/2));
+  player.value.x = Math.max(8, Math.min(canvasSize - player.value.w - 8, cx - player.value.w/2));
 }
 
 function roundRect(ctx:CanvasRenderingContext2D, x:number,y:number,w:number,h:number,r:number,fill:boolean,stroke:boolean){
@@ -268,6 +285,8 @@ onMounted(()=>{
   canvas.value!.addEventListener('touchstart', onTouchStart, { passive: false });
   canvas.value!.addEventListener('touchmove', onTouchMove, { passive: false });
   canvas.value!.addEventListener('touchend', onTouchEnd, { passive: false });
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
 });
 
 onBeforeUnmount(()=>{
@@ -280,7 +299,25 @@ onBeforeUnmount(()=>{
   // aggressively clear arrays to help GC
   enemies.value = [];
   bullets.value = [];
+  window.removeEventListener('resize', resizeCanvas);
 });
+
+function resizeCanvas(){
+  if(!canvas.value || !canvasBox.value) return;
+  const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+  const containerWidth = Math.min(canvasBox.value.clientWidth, 520);
+  const size = Math.max(280, Math.floor(containerWidth));
+  canvasSize = size;
+  canvas.value.width = size * dpr;
+  canvas.value.height = size * dpr;
+  canvas.value.style.width = `${size}px`;
+  canvas.value.style.height = `${size}px`;
+  const context = canvas.value.getContext('2d');
+  if(context){ context.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  // Keep player aligned with bottom and in-bounds on resize
+  player.value.y = Math.max(20, canvasSize - 30);
+  player.value.x = Math.min(player.value.x, canvasSize - player.value.w - 8);
+}
 </script>
 
 

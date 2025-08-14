@@ -10,7 +10,6 @@ export type Progress = {
 export type Profile = {
   id: string;
   name: string;
-  age?: number;
   progress: Progress;
 };
 
@@ -45,9 +44,9 @@ export const useUserStore = defineStore('user', {
   },
   actions: {
     setActiveProfile(id: string){ this.activeProfileId = id; save(this.$state); },
-    addProfile(name: string, age?: number){
+    addProfile(name: string){
       const id = Math.random().toString(36).slice(2,9);
-      const profile: Profile = { id, name, age, progress: { tableMastery: {}, quizHighScore: 0, snakeHighScore: 0, invadersHighScore: 0 } };
+      const profile: Profile = { id, name, progress: { tableMastery: {}, quizHighScore: 0, snakeHighScore: 0, invadersHighScore: 0 } };
       this.profiles.push(profile);
       this.activeProfileId = id;
       save(this.$state);

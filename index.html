@@ -8,7 +8,7 @@
       :root{ --bg:#fffaf0; --panel:#ffffff; --accent:#f59e0b; --accent2:#3b82f6; --good:#16a34a; --bad:#ef4444; --text:#0b0e1a; }
       *{ box-sizing:border-box; }
       html,body,#app{ height:100%; }
-      body{ margin:0; font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', 'Noto Sans', Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; background: linear-gradient(180deg, #fff7ed 0%, #e0f2fe 100%); color:var(--text); }
+      body{ margin:0; font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', 'Noto Sans', Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; background: linear-gradient(180deg, #fff7ed 0%, #e0f2fe 100%); color:var(--text); overflow-x:hidden; }
       .shell{ max-width:1100px; margin:0 auto; padding:16px; }
       .card{ background:var(--panel); border:1px solid #e5e7eb; border-top:4px solid var(--accent); border-radius:14px; padding:16px; box-shadow:none; backdrop-filter:none; }
       .flex{ display:flex; }
@@ -46,7 +46,7 @@
       .grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:14px; }
       .pop{ animation: pop .18s ease; } @keyframes pop { from{ transform:scale(.96); opacity:.5 } to{ transform:scale(1); opacity:1 } }
       .shake{ animation: shake .25s linear; } @keyframes shake { 0%,100%{ transform:translateX(0) } 20%{ transform:translateX(-3px) } 60%{ transform:translateX(3px) } }
-      .muted{ opacity:.75 }
+      .muted{ opacity:.75; overflow-wrap:anywhere; word-break:break-word; white-space:normal; }
     </style>
   </head>
   <body>

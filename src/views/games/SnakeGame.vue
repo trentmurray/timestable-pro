@@ -185,14 +185,28 @@ function draw(){
       c.fillStyle = '#7dd3fc';
     }
   });
+
+  if(gameOver){
+    c.fillStyle = 'rgba(0,0,0,0.55)';
+    const logicalSize = maxCells * grid;
+    c.fillRect(0,0,logicalSize,logicalSize);
+    c.fillStyle = '#ffffff';
+    c.font = '900 28px system-ui';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(`Oh no :(`, (logicalSize)/2, (logicalSize)/2 - 16);
+    c.font = '700 18px system-ui';
+    c.fillText(`Your score: ${score.value}`, (logicalSize)/2, (logicalSize)/2 + 12);
+  }
 }
 
 function end(){
   if(gameOver) return;
   gameOver=true;
   if(loop){ cancelAnimationFrame(loop); loop=null; }
-  alert(`Game over! Score ${score.value}`);
   user.submitSnakeScore(score.value);
+  // render overlay once
+  draw();
 }
 
 function onKey(e: KeyboardEvent){

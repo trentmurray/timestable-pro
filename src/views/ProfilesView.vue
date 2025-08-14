@@ -4,13 +4,9 @@
       <h2 style="margin:0 0 10px;">Create Profile</h2>
       <form @submit.prevent="create">
         <div class="row" style="align-items:flex-end; gap:10px;">
-          <div style="flex:1 1 180px;">
+          <div style="flex:1 1 240px;">
             <label class="muted" style="font-size:12px; display:block; margin:0 0 6px;">Name</label>
             <input class="input" type="text" v-model="name" placeholder="e.g. Alex" />
-          </div>
-          <div style="width:140px;">
-            <label class="muted" style="font-size:12px; display:block; margin:0 0 6px;">Age (optional)</label>
-            <input class="input" v-model.number="age" type="number" placeholder="8" />
           </div>
           <div>
             <button class="btn" type="submit">Add</button>
@@ -46,12 +42,11 @@ const user = useUserStore();
 const router = useRouter();
 
 const name = ref('');
-const age = ref<number | undefined>();
 
 function create(){
   if(!name.value.trim()) return;
-  user.addProfile(name.value.trim(), age.value);
-  name.value=''; age.value=undefined;
+  user.addProfile(name.value.trim());
+  name.value='';
   router.push('/learn');
 }
 

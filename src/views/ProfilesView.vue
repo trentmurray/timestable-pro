@@ -1,25 +1,36 @@
 <template>
   <div class="grid">
     <div class="card pop">
-      <h2>Create Profile</h2>
+      <h2 style="margin:0 0 10px;">Create Profile</h2>
       <form @submit.prevent="create">
-        <div class="row">
-          <input class="input" type="text" v-model="name" placeholder="Name" />
-          <input class="input" v-model.number="age" type="number" placeholder="Age (optional)" />
-          <button class="btn">Add</button>
+        <div class="row" style="align-items:flex-end; gap:10px;">
+          <div style="flex:1 1 180px;">
+            <label class="muted" style="font-size:12px; display:block; margin:0 0 6px;">Name</label>
+            <input class="input" type="text" v-model="name" placeholder="e.g. Alex" />
+          </div>
+          <div style="width:140px;">
+            <label class="muted" style="font-size:12px; display:block; margin:0 0 6px;">Age (optional)</label>
+            <input class="input" v-model.number="age" type="number" placeholder="8" />
+          </div>
+          <div>
+            <button class="btn" type="submit">Add</button>
+          </div>
         </div>
       </form>
     </div>
 
     <div class="card pop" v-for="p in user.profiles" :key="p.id">
-      <div class="flex" style="justify-content:space-between; align-items:center;">
+      <div class="flex" style="flex-direction:column; gap:10px; min-height:140px;">
         <div>
-          <div style="font-weight:800">{{ p.name }}</div>
-          <div class="muted">Highscores: Quiz {{p.progress.quizHighScore}} • Game {{p.progress.snakeHighScore}}</div>
+          <div style="font-weight:900; font-size:18px;">{{ p.name }}</div>
+          <div class="muted" style="margin-top:4px; font-size:13px;">
+            Highscores: Quiz {{p.progress.quizHighScore}} • Snake {{p.progress.snakeHighScore}}
+            <span v-if="p.progress.invadersHighScore !== undefined"> • Invaders {{p.progress.invadersHighScore}}</span>
+          </div>
         </div>
-        <div class="flex gap-12">
-          <button class="btn secondary" @click="select(p.id)">Use</button>
-          <button class="btn" style="background:linear-gradient(90deg, var(--bad), #c2410c); color:white" @click="remove(p.id)">Delete</button>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:auto;">
+          <button class="btn secondary" style="width:100%; padding:10px 12px;" @click="select(p.id)">Use</button>
+          <button class="btn" style="width:100%; background:#fecaca; color:#7f1d1d; padding:10px 12px;" @click="remove(p.id)">Delete</button>
         </div>
       </div>
     </div>

@@ -18,7 +18,7 @@
         <div ref="canvasBox" style="flex:1 1 320px; max-width:520px; width:100%;">
           <canvas ref="canvas" width="520" height="520" style="display:block; border-radius:16px; border:1px solid rgba(0,0,0,.08); background:#0b0f20; touch-action:none;"></canvas>
         </div>
-        <div class="grow" style="flex:0 0 auto; max-width:520px;">
+        <div class="grow" style="flex:0 0 auto; max-width:400px;">
           <div class="muted">Shoot all the wrong answers. Let the correct answer slip past the bottom!</div>
           <div class="row" style="margin-top:10px;">
             <div class="pill">Score: {{ score }}</div>

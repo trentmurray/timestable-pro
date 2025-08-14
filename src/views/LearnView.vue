@@ -20,14 +20,14 @@
 
     <div class="grid">
       <MethodCard v-for="m in methods" :key="m.id" :title="m.title" :body="m.body" :pulse="demo?.id===m.id" @try-demo="runDemo(m.id)">
-        <div v-if="demo && demo.id===m.id" class="card" style="background:rgba(125,211,252,.1); border-color:rgba(125,211,252,.4);">
+        <div v-if="demo && demo.id===m.id" class="inner-card" style="background:rgba(125,211,252,.1); border-color:rgba(125,211,252,.4);">
           <div v-for="(s,i) in demo.steps" :key="i" :class="['pop', {'muted': i<demo.index}]" style="margin:6px 0">{{ s }}</div>
           <div class="muted" style="font-size:12px;">(Click another card to explore more)</div>
         </div>
       </MethodCard>
     </div>
 
-    <div class="card pop" style="margin-top:16px;">
+    <div class="inner-card pop" style="margin-top:16px;">
       <h3>Practice a Table</h3>
       <div class="row">
         <label class="pill">Table

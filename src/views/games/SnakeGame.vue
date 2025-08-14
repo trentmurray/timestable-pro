@@ -13,12 +13,12 @@
     </div>
 
     <div class="card pop" style="display:flex; flex-direction:column; gap:16px;">
-      <div style="font-size:28px; font-weight:900; text-align:center;">{{ question.text }}</div>
+      <div style="font-size:28px; font-weight:900; text-align:left; margin-left: 100px">{{ question.text }}</div>
       <div class="row" style="gap:20px; align-items:flex-start; flex-wrap:wrap; justify-content:center;">
         <div ref="canvasBox" style="flex:1 1 320px; max-width:520px; width:100%;">
           <canvas ref="canvas" width="520" height="520" style="display:block; border-radius:16px; border:1px solid rgba(255,255,255,.1); background:#0b0f20; touch-action:none;"></canvas>
         </div>
-        <div class="grow" style="flex:0 0 auto; max-width:520px;">
+        <div class="grow" style="flex:0 0 auto; max-width:400px;">
           <div class="muted">Eat the correct answer. Hitting walls, yourself, or wrong food ends the game.</div>
           <div class="row" style="margin-top:10px;">
             <div class="pill">Score: {{ score }}</div>

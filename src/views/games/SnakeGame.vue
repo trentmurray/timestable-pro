@@ -14,8 +14,10 @@
 
     <div class="card pop" style="display:flex; flex-direction:column; gap:16px;">
       <div style="font-size:28px; font-weight:900; text-align:center;">{{ question.text }}</div>
-      <div class="row" style="gap:20px; align-items:flex-start;">
-        <canvas ref="canvas" width="520" height="520" style="border-radius:16px; border:1px solid rgba(255,255,255,.1); background:#0b0f20; touch-action:none;"></canvas>
+      <div class="row" style="gap:20px; align-items:flex-start; flex-wrap:wrap;">
+        <div style="flex:1 1 320px; max-width:520px; width:100%;">
+          <canvas ref="canvas" width="520" height="520" style="display:block; width:100%; height:auto; border-radius:16px; border:1px solid rgba(255,255,255,.1); background:#0b0f20; touch-action:none;"></canvas>
+        </div>
         <div class="grow">
           <div class="muted">Eat the correct answer. Hitting walls, yourself, or wrong food ends the game.</div>
           <div class="row" style="margin-top:10px;">
@@ -66,7 +68,8 @@ function placeFood(){
 }
 
 function start(){
-  score.value=0; speedMs.value=160; snake.value={x:10,y:10,cells:[],max:3}; dir.value={x:1,y:0};
+  const startPos = Math.floor(maxCells/2);
+  score.value=0; speedMs.value=160; snake.value={x:startPos,y:startPos,cells:[],max:3}; dir.value={x:1,y:0};
   question.value = makeQuestion(maxTable.value);
   placeFood();
   if(loop) cancelAnimationFrame(loop);
@@ -121,7 +124,7 @@ function update(){
 }
 
 function draw(){
-  const c = ctx.value!; c.clearRect(0,0,520,520);
+  const c = ctx.value!; c.clearRect(0,0,c.canvas.width,c.canvas.height);
   c.fillStyle = 'rgba(125,211,252,0.05)';
   for(let x=0;x<maxCells;x++) for(let y=0;y<maxCells;y++) c.fillRect(x*grid+8, y*grid+8, 2, 2);
 

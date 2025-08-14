@@ -27,9 +27,8 @@
       </div>
 
       <div style="font-size:24px; font-weight:900; margin:12px 0;">{{ q.text }}</div>
-      <div class="row">
-        <input type="number" v-model.number="ans" @keydown.enter="submit"/>
-        <button class="btn" @click="submit">Submit</button>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
+        <button v-for="c in choices" :key="c" class="btn secondary" @click="submitChoice(c)">{{ c }}</button>
       </div>
       <div v-if="flash==='right'" class="pill" style="margin-top:8px; background:rgba(34,197,94,.12); border-color: rgba(34,197,94,.5); color:var(--good)">Nice!</div>
       <div v-else-if="flash==='wrong'" class="pill shake" style="margin-top:8px; background:rgba(239,68,68,.12); border-color: rgba(239,68,68,.5); color:var(--bad)">Not quite ({{q.answer}})</div>
@@ -52,12 +51,12 @@ const started = ref(false);
 const score = ref(0);
 const index = ref(0);
 const q = ref(makeQuestion(maxTable.value));
-const ans = ref<number | null>(null);
+const choices = ref<number[]>([]);
 const flash = ref<'right'|'wrong'|null>(null);
 const timeLeft = ref(12);
 let timer: number | null = null;
 
-function tick(){ timeLeft.value--; if(timeLeft.value<=0) submit(); }
+function tick(){ timeLeft.value--; if(timeLeft.value<=0) timesUp(); }
 
 function start(){
   started.value = true; score.value=0; index.value=0; nextQ();
@@ -65,15 +64,16 @@ function start(){
 
 function nextQ(){
   q.value = makeQuestion(maxTable.value);
-  ans.value = null; flash.value=null; timeLeft.value=12;
+  flash.value=null; timeLeft.value=12;
+  buildChoices();
   if(timer) clearInterval(timer);
   timer = setInterval(tick, 1000) as unknown as number;
 }
 
-function submit(){
+function submitChoice(val:number){
   if(!started.value) return;
   if(timer){ clearInterval(timer); timer=null; }
-  const correct = ans.value === q.value.answer;
+  const correct = val === q.value.answer;
   if(correct){ score.value += 10; flash.value='right'; }
   else { flash.value='wrong'; }
   index.value++;
@@ -89,4 +89,40 @@ function submit(){
 watch(maxTable, ()=>{ if(started.value) nextQ(); });
 
 onBeforeUnmount(()=>{ if(timer) clearInterval(timer); });
+
+function buildChoices(){
+  const correct = q.value.answer;
+  const a = q.value.a; const b = q.value.b;
+  const pool = new Set<number>();
+  pool.add(correct);
+  // plausible distractors: multiples of either multiplicand up to maxTable
+  for(let k=1;k<=maxTable.value && pool.size<6;k++){ pool.add(a*k); pool.add(b*k); }
+  // add near multiples around the correct answer that are divisible by a or b
+  let delta = 1;
+  while(pool.size<6 && delta<50){
+    const up = correct + delta;
+    const down = Math.max(1, correct - delta);
+    if(up % a === 0 || up % b === 0) pool.add(up);
+    if(pool.size<6 && (down % a === 0 || down % b === 0)) pool.add(down);
+    delta++;
+  }
+  const arr = Array.from(pool);
+  while(arr.length>6) arr.splice(Math.floor(Math.random()*arr.length),1);
+  while(arr.length<6){ arr.push(a * (Math.floor(Math.random()*maxTable.value)+1)); }
+  choices.value = arr.sort(()=>Math.random()-0.5);
+}
+
+function timesUp(){
+  if(!started.value) return;
+  if(timer){ clearInterval(timer); timer=null; }
+  flash.value = 'wrong';
+  index.value++;
+  if(index.value>=total.value){
+    started.value=false;
+    alert(`Finished! Score ${score.value}`);
+    user.submitQuizScore(score.value);
+  } else {
+    setTimeout(nextQ, 600);
+  }
+}
 </script>

@@ -42,11 +42,12 @@
       <div v-if="practicing" class="pop" style="margin-top:10px;">
         <div style="font-weight:800">What is {{ table }} × {{ curIndex }} ?</div>
         <div class="row" style="align-items:center; margin-top:8px;">
-          <input type="number" v-model.number="answer" @keydown.enter="submit" />
-          <button class="btn" @click="submit">Check</button>
-          <div v-if="feedback==='right'" class="pill" style="background:rgba(34,197,94,.12); border-color: rgba(34,197,94,.5); color:var(--good)">Correct!</div>
-          <div v-else-if="feedback==='wrong'" class="pill shake" style="background:rgba(239,68,68,.12); border-color: rgba(239,68,68,.5); color:var(--bad)">Oops, try again</div>
+          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); width:100%;">
+            <button v-for="c in choices" :key="c" class="btn secondary" @click="submitChoice(c)">{{ c }}</button>
+          </div>
         </div>
+        <div v-if="feedback==='right'" class="pill" style="margin-top:8px; background:rgba(34,197,94,.12); border-color: rgba(34,197,94,.5); color:var(--good)">Correct!</div>
+        <div v-else-if="feedback==='wrong'" class="pill shake" style="margin-top:8px; background:rgba(239,68,68,.12); border-color: rgba(239,68,68,.5); color:var(--bad)">Oops, try again</div>
       </div>
     </div>
   </div>
@@ -120,21 +121,47 @@ async function animateSteps(){
 const table = ref(2);
 const practicing = ref(false);
 const curIndex = ref(1);
-const answer = ref<number | null>(null);
 const feedback = ref<'right'|'wrong'|null>(null);
+const choices = ref<number[]>([]);
 
 const mastery = computed(()=> user.activeProfile?.progress.tableMastery[`${table.value}x`] ?? 0);
 
-function startPractice(){ practicing.value = true; curIndex.value = 1; feedback.value=null; answer.value=null; }
-function submit(){
-  if(answer.value===null) return;
-  const correct = (table.value * curIndex.value) === answer.value;
+function startPractice(){ practicing.value = true; curIndex.value = 1; feedback.value=null; buildChoices(); }
+
+function buildChoices(){
+  const correct = table.value * curIndex.value;
+  const pool = new Set<number>([correct]);
+  // plausible distractors: multiples of `table` within a typical range
+  for(let k=1;k<=12 && pool.size<4;k++) pool.add(table.value * k);
+  // If still short, add nearby numbers divisible by table
+  let delta = 1;
+  while(pool.size<4 && delta<20){
+    const up = correct + delta;
+    const down = Math.max(1, correct - delta);
+    if(up % table.value === 0) pool.add(up);
+    if(pool.size<4 && down % table.value === 0) pool.add(down);
+    delta++;
+  }
+  let arr = Array.from(pool);
+  // ensure exactly 4 (keep the correct answer)
+  if(arr.length>4){
+    const filtered = arr.filter(v=>v!==correct);
+    while(1 + filtered.length > 4){ filtered.splice(Math.floor(Math.random()*filtered.length),1); }
+    arr = [correct, ...filtered];
+  }
+  while(arr.length<4){ arr.push(table.value * (Math.floor(Math.random()*12)+1)); }
+  // shuffle
+  choices.value = arr.sort(()=>Math.random()-0.5);
+}
+
+function submitChoice(val:number){
+  const correct = (table.value * curIndex.value) === val;
   feedback.value = correct ? 'right' : 'wrong';
   if(correct){
     curIndex.value++;
     user.updateMastery(table.value, 4);
     if(curIndex.value>12){ practicing.value=false; alert('Great work! Table complete.'); }
+    else buildChoices();
   }
-  answer.value = null;
 }
 </script>

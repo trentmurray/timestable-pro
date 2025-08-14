@@ -15,7 +15,7 @@
     <div class="card pop" style="display:flex; flex-direction:column; gap:16px;">
       <div style="font-size:28px; font-weight:900; text-align:center;">{{ question.text }}</div>
       <div class="row" style="gap:20px; align-items:flex-start;">
-        <canvas ref="canvas" width="520" height="520" style="border-radius:16px; border:1px solid rgba(255,255,255,.1); background:#0b0f20"></canvas>
+        <canvas ref="canvas" width="520" height="520" style="border-radius:16px; border:1px solid rgba(255,255,255,.1); background:#0b0f20; touch-action:none;"></canvas>
         <div class="grow">
           <div class="muted">Eat the correct answer. Hitting walls, yourself, or wrong food ends the game.</div>
           <div class="row" style="margin-top:10px;">
@@ -47,6 +47,7 @@ const snake = ref<{ x:number; y:number; cells:{x:number;y:number}[]; max:number 
 const dir = ref<{x:number;y:number}>({x:1,y:0});
 const speedMs = ref(140);
 let loop: number | null = null;
+let touchStart: {x:number;y:number} | null = null;
 
 const question = ref(makeQuestion());
 const foods = ref<{x:number;y:number; value:number; correct:boolean}[]>([]);
@@ -172,6 +173,42 @@ function onKey(e: KeyboardEvent){
   dir.value = proposed;
 }
 
+function onTouchStart(e: TouchEvent){
+  if(!loop || gameOver) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  touchStart = { x: t.clientX, y: t.clientY };
+}
+
+function onTouchMove(e: TouchEvent){
+  if(!touchStart || !loop || gameOver) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const dx = t.clientX - touchStart.x;
+  const dy = t.clientY - touchStart.y;
+  const absX = Math.abs(dx);
+  const absY = Math.abs(dy);
+  if(Math.max(absX, absY) < 24) return; // small threshold to avoid accidental swipes
+  let proposed: {x:number;y:number} | null = null;
+  if(absX > absY){
+    proposed = { x: dx > 0 ? 1 : -1, y: 0 };
+  } else {
+    proposed = { x: 0, y: dy > 0 ? 1 : -1 };
+  }
+  if(!proposed) return;
+  const isOpposite = proposed.x === -dir.value.x && proposed.y === -dir.value.y;
+  if(isOpposite) return;
+  dir.value = proposed;
+  // After a successful direction set, reset start so we need a new swipe
+  touchStart = { x: t.clientX, y: t.clientY };
+}
+
+function onTouchEnd(e: TouchEvent){
+  if(!loop || gameOver) return;
+  e.preventDefault();
+  touchStart = null;
+}
+
 function roundRect(ctx:CanvasRenderingContext2D, x:number,y:number,w:number,h:number,r:number,fill:boolean,stroke:boolean){
   if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
   ctx.beginPath();
@@ -188,10 +225,19 @@ function roundRect(ctx:CanvasRenderingContext2D, x:number,y:number,w:number,h:nu
 onMounted(()=>{
   if(!canvas.value) return; ctx.value = canvas.value.getContext('2d');
   window.addEventListener('keydown', onKey);
+  // Touch controls
+  canvas.value!.addEventListener('touchstart', onTouchStart, { passive: false });
+  canvas.value!.addEventListener('touchmove', onTouchMove, { passive: false });
+  canvas.value!.addEventListener('touchend', onTouchEnd, { passive: false });
 });
 
 onBeforeUnmount(()=>{
   window.removeEventListener('keydown', onKey);
   if(loop) cancelAnimationFrame(loop);
+  if(canvas.value){
+    canvas.value.removeEventListener('touchstart', onTouchStart as EventListener);
+    canvas.value.removeEventListener('touchmove', onTouchMove as EventListener);
+    canvas.value.removeEventListener('touchend', onTouchEnd as EventListener);
+  }
 });
 </script>

@@ -4,6 +4,7 @@ export type Progress = {
   tableMastery: Record<string, number>;
   quizHighScore: number;
   snakeHighScore: number;
+  invadersHighScore: number;
 };
 
 export type Profile = {
@@ -46,7 +47,7 @@ export const useUserStore = defineStore('user', {
     setActiveProfile(id: string){ this.activeProfileId = id; save(this.$state); },
     addProfile(name: string, age?: number){
       const id = Math.random().toString(36).slice(2,9);
-      const profile: Profile = { id, name, age, progress: { tableMastery: {}, quizHighScore: 0, snakeHighScore: 0 } };
+      const profile: Profile = { id, name, age, progress: { tableMastery: {}, quizHighScore: 0, snakeHighScore: 0, invadersHighScore: 0 } };
       this.profiles.push(profile);
       this.activeProfileId = id;
       save(this.$state);
@@ -71,6 +72,13 @@ export const useUserStore = defineStore('user', {
     submitSnakeScore(score: number){
       const ap = this.activeProfile; if(!ap) return;
       ap.progress.snakeHighScore = Math.max(ap.progress.snakeHighScore, score);
+      save(this.$state);
+    },
+    submitInvadersScore(score: number){
+      const ap = this.activeProfile; if(!ap) return;
+      // backward compatibility: ensure field exists
+      if(typeof ap.progress.invadersHighScore !== 'number'){ ap.progress.invadersHighScore = 0; }
+      ap.progress.invadersHighScore = Math.max(ap.progress.invadersHighScore, score);
       save(this.$state);
     }
   }

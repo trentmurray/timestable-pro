@@ -188,7 +188,9 @@ function draw(){
 }
 
 function end(){
+  if(gameOver) return;
   gameOver=true;
+  if(loop){ cancelAnimationFrame(loop); loop=null; }
   alert(`Game over! Score ${score.value}`);
   user.submitSnakeScore(score.value);
 }
@@ -274,13 +276,14 @@ onMounted(()=>{
 
 onBeforeUnmount(()=>{
   window.removeEventListener('keydown', onKey);
-  if(loop) cancelAnimationFrame(loop);
+  if(loop){ cancelAnimationFrame(loop); loop=null; }
   if(canvas.value){
     canvas.value.removeEventListener('touchstart', onTouchStart as EventListener);
     canvas.value.removeEventListener('touchmove', onTouchMove as EventListener);
     canvas.value.removeEventListener('touchend', onTouchEnd as EventListener);
   }
   window.removeEventListener('resize', resizeCanvas);
+  foods.value = []; snake.value.cells = [];
 });
 
 function resizeCanvas(){

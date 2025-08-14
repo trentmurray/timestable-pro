@@ -15,8 +15,8 @@
     <div class="card pop" style="display:flex; flex-direction:column; gap:16px;">
       <div style="font-size:28px; font-weight:900; text-align:center;">{{ question.text }}</div>
       <div class="row" style="gap:20px; align-items:flex-start; flex-wrap:wrap;">
-        <div style="flex:1 1 320px; max-width:520px; width:100%;">
-          <canvas ref="canvas" width="520" height="520" style="display:block; width:100%; height:auto; border-radius:16px; border:1px solid rgba(255,255,255,.1); background:#0b0f20; touch-action:none;"></canvas>
+        <div ref="canvasBox" style="flex:1 1 320px; max-width:520px; width:100%;">
+          <canvas ref="canvas" width="520" height="520" style="display:block; border-radius:16px; border:1px solid rgba(255,255,255,.1); background:#0b0f20; touch-action:none;"></canvas>
         </div>
         <div class="grow">
           <div class="muted">Eat the correct answer. Hitting walls, yourself, or wrong food ends the game.</div>
@@ -41,9 +41,10 @@ const user = useUserStore();
 const best = computed(()=> user.activeProfile?.progress.snakeHighScore ?? 0);
 
 const canvas = ref<HTMLCanvasElement | null>(null);
+const canvasBox = ref<HTMLDivElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
-const grid = 20;
-const maxCells = 520 / grid;
+const grid = 24; // slightly larger cells for better legibility on mobile
+let maxCells = 520 / grid;
 
 const snake = ref<{ x:number; y:number; cells:{x:number;y:number}[]; max:number }>({ x:10, y:10, cells:[], max:3 });
 const dir = ref<{x:number;y:number}>({x:1,y:0});
@@ -130,9 +131,9 @@ function draw(){
 
   for(const f of foods.value){
     c.fillStyle = '#a78bfa';
-    roundRect(c, f.x*grid+2, f.y*grid+2, grid-4, grid-4, 6, true, false);
+    roundRect(c, f.x*grid+2, f.y*grid+2, grid-4, grid-4, 8, true, false);
     c.fillStyle = '#ffffff';
-    c.font = 'bold 12px system-ui';
+    c.font = `bold ${Math.max(12, Math.floor(grid*0.55))}px system-ui`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.fillText(String(f.value), f.x*grid+grid/2, f.y*grid+grid/2);
@@ -232,6 +233,9 @@ onMounted(()=>{
   canvas.value!.addEventListener('touchstart', onTouchStart, { passive: false });
   canvas.value!.addEventListener('touchmove', onTouchMove, { passive: false });
   canvas.value!.addEventListener('touchend', onTouchEnd, { passive: false });
+  // Responsive scaling of the internal canvas size to fit container and recompute maxCells
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
 });
 
 onBeforeUnmount(()=>{
@@ -242,5 +246,22 @@ onBeforeUnmount(()=>{
     canvas.value.removeEventListener('touchmove', onTouchMove as EventListener);
     canvas.value.removeEventListener('touchend', onTouchEnd as EventListener);
   }
+  window.removeEventListener('resize', resizeCanvas);
 });
+
+function resizeCanvas(){
+  if(!canvas.value || !canvasBox.value) return;
+  const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+  const containerWidth = Math.min(canvasBox.value.clientWidth, 520);
+  // ensure width fits grid multiple
+  const cells = Math.floor(containerWidth / grid);
+  const pixelSize = cells * grid;
+  maxCells = cells;
+  canvas.value.width = pixelSize * dpr;
+  canvas.value.height = pixelSize * dpr;
+  canvas.value.style.width = `${pixelSize}px`;
+  canvas.value.style.height = `${pixelSize}px`;
+  const context = canvas.value.getContext('2d');
+  if(context){ context.setTransform(dpr, 0, 0, dpr, 0, 0); }
+}
 </script>

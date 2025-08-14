@@ -14,21 +14,20 @@ export function makeQuestion(range=12): Question{
   return { a, b, answer: a*b, text: `${a} × ${b} = ?` };
 }
 
-export type ExtendPrompt = { left:string; right:string; missingIndex: 0|1|2; solution:number };
+export type ExtendPrompt = { left:string; right:string; solution:number; a:number; b:number; product:number };
 
 export function makeExtend(range=12): ExtendPrompt{
   const a = randInt(1, range);
   const b = randInt(1, range);
   const product = a*b;
-  const forms: [string, 0|1|2, number][] = [
-    [`${a} × ? = ${product} / ${b}`, 1, b],
-    [`? × ${b} = ${product} / ${a}`, 0, a],
-    [`${a} × ${b} = ${product} / ?`, 2, (product/b)],
+  const forms: [string, string, number][] = [
+    [`${a} × ? = ${product}`, `${product} ÷ ${a} = ?`, b],
+    [`? × ${b} = ${product}`, `${product} ÷ ${b} = ?`, a],
+    [`${a} × ${b} = ${product}`, `${product} ÷ ? = ${a}`, b],
   ];
   const pick = forms[randInt(0, forms.length-1)];
-  const [left, missingIndex, solution] = pick;
-  const right = `${product} / ${b}`;
-  return { left, right, missingIndex, solution };
+  const [left, right, solution] = pick;
+  return { left, right, solution, a, b, product };
 }
 
 export const METHODS = [

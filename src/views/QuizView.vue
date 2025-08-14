@@ -27,8 +27,14 @@
       </div>
 
       <div style="font-size:24px; font-weight:900; margin:12px 0;">{{ q.text }}</div>
-      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
-        <button v-for="c in choices" :key="c" class="btn secondary" @click="submitChoice(c)">{{ c }}</button>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));">
+        <button
+          v-for="c in choices"
+          :key="c"
+          class="btn secondary"
+          @click="submitChoice(c)"
+          style="width:100%; aspect-ratio:1/1; padding:0; display:flex; align-items:center; justify-content:center; font-size:clamp(18px, 3.4vw, 26px);"
+        >{{ c }}</button>
       </div>
       <div v-if="flash==='right'" class="pill" style="margin-top:8px; background:rgba(34,197,94,.12); border-color: rgba(34,197,94,.5); color:var(--good)">Nice!</div>
       <div v-else-if="flash==='wrong'" class="pill shake" style="margin-top:8px; background:rgba(239,68,68,.12); border-color: rgba(239,68,68,.5); color:var(--bad)">Not quite ({{q.answer}})</div>
@@ -106,9 +112,20 @@ function buildChoices(){
     if(pool.size<6 && (down % a === 0 || down % b === 0)) pool.add(down);
     delta++;
   }
-  const arr = Array.from(pool);
-  while(arr.length>6) arr.splice(Math.floor(Math.random()*arr.length),1);
-  while(arr.length<6){ arr.push(a * (Math.floor(Math.random()*maxTable.value)+1)); }
+  let arr = Array.from(pool);
+  // Ensure the correct answer is always present and we only trim distractors
+  if(arr.length>6){
+    const distractors = arr.filter(v=>v!==correct);
+    while(distractors.length > 5){ distractors.splice(Math.floor(Math.random()*distractors.length),1); }
+    arr = [correct, ...distractors];
+  }
+  // If still short, add unique plausible distractors (avoid the correct value)
+  const seen = new Set(arr);
+  while(arr.length<6){
+    const candidate = (Math.random()<0.5 ? a : b) * (Math.floor(Math.random()*maxTable.value)+1);
+    if(candidate!==correct && !seen.has(candidate)){ arr.push(candidate); seen.add(candidate); }
+  }
+  // Shuffle for display
   choices.value = arr.sort(()=>Math.random()-0.5);
 }
 

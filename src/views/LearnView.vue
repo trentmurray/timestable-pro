@@ -42,8 +42,14 @@
       <div v-if="practicing" class="pop" style="margin-top:10px;">
         <div style="font-weight:800">What is {{ table }} × {{ curIndex }} ?</div>
         <div class="row" style="align-items:center; margin-top:8px;">
-          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); width:100%;">
-            <button v-for="c in choices" :key="c" class="btn secondary" @click="submitChoice(c)">{{ c }}</button>
+          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); width:100%;">
+            <button
+              v-for="c in choices"
+              :key="c"
+              class="btn secondary"
+              @click="submitChoice(c)"
+              style="width:100%; aspect-ratio:1/1; padding:0; display:flex; align-items:center; justify-content:center; font-size:clamp(18px, 4vw, 28px);"
+            >{{ c }}</button>
           </div>
         </div>
         <div v-if="feedback==='right'" class="pill" style="margin-top:8px; background:rgba(34,197,94,.12); border-color: rgba(34,197,94,.5); color:var(--good)">Correct!</div>

@@ -12,17 +12,19 @@
       </div>
     </div>
 
-    <div class="card pop" style="display:flex; gap:20px; align-items:flex-start;">
-      <canvas ref="canvas" width="520" height="520" style="border-radius:16px; border:1px solid rgba(255,255,255,.1); background:#0b0f20"></canvas>
-      <div class="grow">
-        <div class="pill">Question: <strong>{{ question.text }}</strong></div>
-        <div style="margin-top:8px;" class="muted">Eat the correct answer. Hitting walls, yourself, or wrong food ends the game.</div>
-        <div class="row" style="margin-top:10px;">
-          <div class="pill">Score: {{ score }}</div>
-          <div class="pill">Best: {{ best }}</div>
-          <div class="pill">Speed: {{ speedMs }}ms</div>
+    <div class="card pop" style="display:flex; flex-direction:column; gap:16px;">
+      <div style="font-size:28px; font-weight:900; text-align:center;">{{ question.text }}</div>
+      <div class="row" style="gap:20px; align-items:flex-start;">
+        <canvas ref="canvas" width="520" height="520" style="border-radius:16px; border:1px solid rgba(255,255,255,.1); background:#0b0f20"></canvas>
+        <div class="grow">
+          <div class="muted">Eat the correct answer. Hitting walls, yourself, or wrong food ends the game.</div>
+          <div class="row" style="margin-top:10px;">
+            <div class="pill">Score: {{ score }}</div>
+            <div class="pill">Best: {{ best }}</div>
+            <div class="pill">Speed: {{ speedMs }}ms</div>
+          </div>
+          <div class="muted" style="margin-top:10px">Controls: <span class="kbd">W</span>/<span class="kbd">↑</span> <span class="kbd">A</span>/<span class="kbd">←</span> <span class="kbd">S</span>/<span class="kbd">↓</span> <span class="kbd">D</span>/<span class="kbd">→</span></div>
         </div>
-        <div class="muted" style="margin-top:10px">Controls: <span class="kbd">W</span>/<span class="kbd">↑</span> <span class="kbd">A</span>/<span class="kbd">←</span> <span class="kbd">S</span>/<span class="kbd">↓</span> <span class="kbd">D</span>/<span class="kbd">→</span></div>
       </div>
     </div>
   </div>
@@ -123,9 +125,9 @@ function draw(){
   for(let x=0;x<maxCells;x++) for(let y=0;y<maxCells;y++) c.fillRect(x*grid+8, y*grid+8, 2, 2);
 
   for(const f of foods.value){
-    c.fillStyle = f.correct ? '#22c55e' : '#ef4444';
+    c.fillStyle = '#a78bfa';
     roundRect(c, f.x*grid+2, f.y*grid+2, grid-4, grid-4, 6, true, false);
-    c.fillStyle = '#0b0e1a';
+    c.fillStyle = '#ffffff';
     c.font = 'bold 12px system-ui';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
@@ -153,10 +155,21 @@ function end(){
 }
 
 function onKey(e: KeyboardEvent){
-  if(e.key==='ArrowUp' || e.key.toLowerCase()==='w') dir.value = {x:0, y:-1};
-  else if(e.key==='ArrowDown' || e.key.toLowerCase()==='s') dir.value = {x:0, y:1};
-  else if(e.key==='ArrowLeft' || e.key.toLowerCase()==='a') dir.value = {x:-1, y:0};
-  else if(e.key==='ArrowRight' || e.key.toLowerCase()==='d') dir.value = {x:1, y:0};
+  const isArrowKey = e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight';
+  if(isArrowKey && loop && !gameOver){
+    e.preventDefault();
+  }
+  let proposed: {x:number;y:number} | null = null;
+  const k = e.key.toLowerCase();
+  if(e.key==='ArrowUp' || k==='w') proposed = {x:0, y:-1};
+  else if(e.key==='ArrowDown' || k==='s') proposed = {x:0, y:1};
+  else if(e.key==='ArrowLeft' || k==='a') proposed = {x:-1, y:0};
+  else if(e.key==='ArrowRight' || k==='d') proposed = {x:1, y:0};
+  if(!proposed) return;
+  // Ignore reversing directly into yourself: disallow exact opposite direction
+  const isOpposite = proposed.x === -dir.value.x && proposed.y === -dir.value.y;
+  if(isOpposite) return;
+  dir.value = proposed;
 }
 
 function roundRect(ctx:CanvasRenderingContext2D, x:number,y:number,w:number,h:number,r:number,fill:boolean,stroke:boolean){

@@ -44,7 +44,7 @@ const canvas = ref<HTMLCanvasElement | null>(null);
 const canvasBox = ref<HTMLDivElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
 const grid = 24; // slightly larger cells for better legibility on mobile
-let maxCells = 520 / grid;
+let maxCells = Math.floor(520 / grid);
 
 const snake = ref<{ x:number; y:number; cells:{x:number;y:number}[]; max:number }>({ x:10, y:10, cells:[], max:3 });
 const dir = ref<{x:number;y:number}>({x:1,y:0});
@@ -63,8 +63,42 @@ function placeFood(){
   const wrong1 = correctVal + randInt(1,5);
   const wrong2 = Math.max(1, correctVal - randInt(1,5));
   const vals = [correctVal, wrong1, wrong2].sort(()=>Math.random()-0.5);
+  const head = (snake.value.cells[0]) ?? { x: snake.value.x, y: snake.value.y };
+  const used = new Set<string>();
   for(const v of vals){
-    foods.value.push({ x: randInt(0, maxCells-1), y: randInt(0, maxCells-1), value: v, correct: v===correctVal });
+    let x = 0, y = 0; let attempts = 0;
+    while(true){
+      x = randInt(0, maxCells-1);
+      y = randInt(0, maxCells-1);
+      const key = `${x},${y}`;
+      let tooCloseAhead = false;
+      if(dir.value.x !== 0){
+        // moving horizontally: block tiles directly ahead on the same row within 4 cells
+        if(y === head.y){
+          if(dir.value.x > 0){
+            tooCloseAhead = x > head.x && (x - head.x) < 4;
+          } else {
+            tooCloseAhead = x < head.x && (head.x - x) < 4;
+          }
+        }
+      } else {
+        // moving vertically: block tiles directly ahead on the same column within 4 cells
+        if(x === head.x){
+          if(dir.value.y > 0){
+            tooCloseAhead = y > head.y && (y - head.y) < 4;
+          } else {
+            tooCloseAhead = y < head.y && (head.y - y) < 4;
+          }
+        }
+      }
+      if(!used.has(key) && !tooCloseAhead) break;
+      attempts++;
+      if(attempts > 500){ // fallback to avoid infinite loops on tiny boards
+        break;
+      }
+    }
+    used.add(`${x},${y}`);
+    foods.value.push({ x, y, value: v, correct: v===correctVal });
   }
 }
 

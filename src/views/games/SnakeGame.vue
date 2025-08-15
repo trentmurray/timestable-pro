@@ -18,9 +18,9 @@
         <div ref="canvasBox" style="flex:1 1 320px; max-width:520px; width:100%;">
           <canvas ref="canvas" width="520" height="520" style="display:block; border-radius:16px; border:1px solid rgba(255,255,255,.1); background:#0b0f20; touch-action:none;"></canvas>
         </div>
-        <div class="grow" style="flex:0 0 auto; max-width:400px;">
+        <div class="grow" style="flex:0 0 auto; max-width:350px; text-align: center">
           <div class="muted">Eat the correct answer. Hitting walls, yourself, or wrong food ends the game.</div>
-          <div class="row" style="margin-top:10px;">
+          <div class="row" style="margin-top:10px;text-align: center; align-items: center; justify-content: center;">
             <div class="pill">Score: {{ score }}</div>
             <div class="pill">Best: {{ best }}</div>
             <div class="pill">Speed: {{ speedMs }}ms</div>

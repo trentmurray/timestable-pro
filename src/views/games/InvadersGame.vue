@@ -174,8 +174,23 @@ function update(){
     const e = enemies.value[idx];
     if(e.y + e.h >= canvasSize){
       if(e.correct){
-        // correct answer hit bottom - game over!
-        return end();
+        // correct answer hit bottom - check if all wrong answers are cleared
+        const remainingWrongAnswers = enemies.value.filter(enemy => !enemy.correct).length;
+        if(remainingWrongAnswers > 0){
+          // still wrong answers in wave - game over!
+          return end();
+        } else {
+          // all wrong answers cleared - round complete
+          score.value += 10;
+          // progress difficulty randomly
+          if(Math.random() < 0.5) wrongCount.value = Math.min(wrongCount.value + 1, 7); else fallSpeed.value = Math.min(fallSpeed.value + 0.25, 4);
+          level.value++;
+          question.value = makeQuestion(maxTable.value);
+          enemies.value.length = 0;
+          bullets.value.length = 0;
+          spawnWave();
+          return; // exit update after round reset to avoid iterating stale arrays
+        }
       } else {
         // wrong answer hit bottom - game over!
         return end();

@@ -174,17 +174,10 @@ function update(){
     const e = enemies.value[idx];
     if(e.y + e.h >= canvasSize){
       if(e.correct){
-        // round complete
-        score.value += 10;
-        // progress difficulty randomly
-        if(Math.random() < 0.5) wrongCount.value = Math.min(wrongCount.value + 1, 7); else fallSpeed.value = Math.min(fallSpeed.value + 0.25, 4);
-        level.value++;
-        question.value = makeQuestion(maxTable.value);
-        enemies.value.length = 0;
-        bullets.value.length = 0;
-        spawnWave();
-        return; // exit update after round reset to avoid iterating stale arrays
+        // correct answer hit bottom - game over!
+        return end();
       } else {
+        // wrong answer hit bottom - game over!
         return end();
       }
     }

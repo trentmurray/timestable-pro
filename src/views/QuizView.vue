@@ -41,6 +41,15 @@
     </div>
 
     <div v-else class="muted">Press Start to begin a timed challenge.</div>
+
+    <!-- Results Overlay -->
+    <div v-if="showResults" class="results-overlay pop">
+      <div class="results-card">
+        <div style="font-size:28px; margin-bottom:8px;">{{ resultsMessage }}</div>
+        <div class="muted" style="margin-bottom:16px;">Great job completing the quiz!</div>
+        <button class="btn" @click="showResults = false; started = false">Play Again</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -60,6 +69,8 @@ const q = ref(makeQuestion(maxTable.value));
 const choices = ref<number[]>([]);
 const flash = ref<'right'|'wrong'|null>(null);
 const timeLeft = ref(12);
+const showResults = ref(false);
+const resultsMessage = ref('');
 let timer: number | null = null;
 
 function tick(){ timeLeft.value--; if(timeLeft.value<=0) timesUp(); }
@@ -85,7 +96,8 @@ function submitChoice(val:number){
   index.value++;
   if(index.value>=total.value){
     started.value=false;
-    alert(`Finished! Score ${score.value}`);
+    showResults.value = true;
+    resultsMessage.value = `🎉 Quiz Complete! Your score: ${score.value}`;
     user.submitQuizScore(score.value);
   } else {
     setTimeout(nextQ, 600);
@@ -136,7 +148,8 @@ function timesUp(){
   index.value++;
   if(index.value>=total.value){
     started.value=false;
-    alert(`Finished! Score ${score.value}`);
+    showResults.value = true;
+    resultsMessage.value = `🎉 Quiz Complete! Your score: ${score.value}`;
     user.submitQuizScore(score.value);
   } else {
     setTimeout(nextQ, 600);

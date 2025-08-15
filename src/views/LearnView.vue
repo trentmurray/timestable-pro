@@ -56,6 +56,15 @@
         <div v-else-if="feedback==='wrong'" class="pill shake" style="margin-top:8px; background:rgba(239,68,68,.12); border-color: rgba(239,68,68,.5); color:var(--bad)">Oops, try again</div>
       </div>
     </div>
+
+    <!-- Table Complete Overlay -->
+    <div v-if="showComplete" class="results-overlay pop">
+      <div class="results-card">
+        <div style="font-size:28px; margin-bottom:8px;">🎉 Table Complete!</div>
+        <div class="muted" style="margin-bottom:16px;">Great work practicing the {{ table }}× table!</div>
+        <button class="btn" @click="showComplete = false">Continue</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -129,6 +138,7 @@ const practicing = ref(false);
 const curIndex = ref(1);
 const feedback = ref<'right'|'wrong'|null>(null);
 const choices = ref<number[]>([]);
+const showComplete = ref(false);
 
 const mastery = computed(()=> user.activeProfile?.progress.tableMastery[`${table.value}x`] ?? 0);
 
@@ -166,7 +176,7 @@ function submitChoice(val:number){
   if(correct){
     curIndex.value++;
     user.updateMastery(table.value, 4);
-    if(curIndex.value>12){ practicing.value=false; alert('Great work! Table complete.'); }
+    if(curIndex.value>12){ practicing.value=false; showComplete.value=true; }
     else buildChoices();
   }
 }

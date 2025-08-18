@@ -8,7 +8,6 @@
             <option v-for="n in 12" :key="n" :value="n">{{ n }}</option>
           </select>
         </label>
-        <button class="btn" @click="start">Play</button>
       </div>
     </div>
 
@@ -56,6 +55,7 @@ const question = ref(makeQuestion());
 const foods = ref<{x:number;y:number; value:number; correct:boolean}[]>([]);
 const score = ref(0);
 const maxTable = ref(12);
+const waitingToStart = ref(true);
 
 function placeFood(){
   foods.value = [];
@@ -110,6 +110,7 @@ function start(){
   if(loop) cancelAnimationFrame(loop);
   last = 0; accumulator = 0;
   gameOver=false;
+  waitingToStart.value = false;
   loop = requestAnimationFrame(frame);
 }
 
@@ -186,7 +187,7 @@ function draw(){
     }
   });
 
-  if(gameOver){
+  if(waitingToStart.value || gameOver){
     c.fillStyle = 'rgba(0,0,0,0.55)';
     const logicalSize = maxCells * grid;
     c.fillRect(0,0,logicalSize,logicalSize);
@@ -194,9 +195,40 @@ function draw(){
     c.font = '900 28px system-ui';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText(`Oh no :(`, (logicalSize)/2, (logicalSize)/2 - 16);
-    c.font = '700 18px system-ui';
-    c.fillText(`Your score: ${score.value}`, (logicalSize)/2, (logicalSize)/2 + 12);
+    
+    if(waitingToStart.value){
+      c.fillText(`Snake Math`, (logicalSize)/2, (logicalSize)/2 - 40);
+      c.font = '700 16px system-ui';
+      c.fillText(`Eat the correct answer!`, (logicalSize)/2, (logicalSize)/2 - 10);
+      
+      // Draw play button
+      const btnWidth = 120;
+      const btnHeight = 40;
+      const btnX = (logicalSize - btnWidth) / 2;
+      const btnY = (logicalSize)/2 + 20;
+      
+      c.fillStyle = '#ff6d4d';
+      roundRect(c, btnX, btnY, btnWidth, btnHeight, 8, true, false);
+      c.fillStyle = '#ffffff';
+      c.font = '700 16px system-ui';
+      c.fillText('PLAY', (logicalSize)/2, btnY + btnHeight/2 + 4);
+    } else {
+      c.fillText(`Oh no :(`, (logicalSize)/2, (logicalSize)/2 - 16);
+      c.font = '700 18px system-ui';
+      c.fillText(`Your score: ${score.value}`, (logicalSize)/2, (logicalSize)/2 + 12);
+      
+      // Draw play again button
+      const btnWidth = 120;
+      const btnHeight = 40;
+      const btnX = (logicalSize - btnWidth) / 2;
+      const btnY = (logicalSize)/2 + 40;
+      
+      c.fillStyle = '#ff6d4d';
+      roundRect(c, btnX, btnY, btnWidth, btnHeight, 8, true, false);
+      c.fillStyle = '#ffffff';
+      c.font = '700 16px system-ui';
+      c.fillText('PLAY AGAIN', (logicalSize)/2, btnY + btnHeight/2 + 4);
+    }
   }
 }
 
@@ -207,6 +239,34 @@ function end(){
   user.submitSnakeScore(score.value);
   // render overlay once
   draw();
+}
+
+function resetGame(){
+  gameOver = false;
+  if(loop){ cancelAnimationFrame(loop); loop=null; }
+  start();
+}
+
+function handleCanvasClick(canvasX: number, canvasY: number){
+  const logicalSize = maxCells * grid;
+  const scale = canvas.value!.width / logicalSize;
+  const x = canvasX / scale;
+  const y = canvasY / scale;
+  
+  if(waitingToStart.value || gameOver){
+    const btnWidth = 120;
+    const btnHeight = 40;
+    const btnX = (logicalSize - btnWidth) / 2;
+    const btnY = waitingToStart.value ? (logicalSize)/2 + 20 : (logicalSize)/2 + 40;
+    
+    if(x >= btnX && x <= btnX + btnWidth && y >= btnY && y <= btnY + btnHeight){
+      if(waitingToStart.value){
+        start();
+      } else {
+        resetGame();
+      }
+    }
+  }
 }
 
 function onKey(e: KeyboardEvent){
@@ -228,6 +288,18 @@ function onKey(e: KeyboardEvent){
 }
 
 function onTouchStart(e: TouchEvent){
+  if(waitingToStart.value || gameOver) {
+    e.preventDefault();
+    const t = e.touches[0];
+    const rect = canvas.value!.getBoundingClientRect();
+    const x = t.clientX - rect.left;
+    const y = t.clientY - rect.top;
+    const scale = canvas.value!.width / rect.width;
+    const canvasX = x * scale;
+    const canvasY = y * scale;
+    handleCanvasClick(canvasX, canvasY);
+    return;
+  }
   if(!loop || gameOver) return;
   e.preventDefault();
   const t = e.touches[0];
@@ -263,6 +335,19 @@ function onTouchEnd(e: TouchEvent){
   touchStart = null;
 }
 
+function onCanvasClick(e: MouseEvent){
+  if(waitingToStart.value || gameOver) {
+    e.preventDefault();
+    const rect = canvas.value!.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const scale = canvas.value!.width / rect.width;
+    const canvasX = x * scale;
+    const canvasY = y * scale;
+    handleCanvasClick(canvasX, canvasY);
+  }
+}
+
 function roundRect(ctx:CanvasRenderingContext2D, x:number,y:number,w:number,h:number,r:number,fill:boolean,stroke:boolean){
   if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
   ctx.beginPath();
@@ -283,9 +368,13 @@ onMounted(()=>{
   canvas.value!.addEventListener('touchstart', onTouchStart, { passive: false });
   canvas.value!.addEventListener('touchmove', onTouchMove, { passive: false });
   canvas.value!.addEventListener('touchend', onTouchEnd, { passive: false });
+  // Mouse click for play button
+  canvas.value!.addEventListener('click', onCanvasClick);
   // Responsive scaling of the internal canvas size to fit container and recompute maxCells
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
+  // Initial draw to show play button
+  draw();
 });
 
 onBeforeUnmount(()=>{
@@ -295,6 +384,7 @@ onBeforeUnmount(()=>{
     canvas.value.removeEventListener('touchstart', onTouchStart as EventListener);
     canvas.value.removeEventListener('touchmove', onTouchMove as EventListener);
     canvas.value.removeEventListener('touchend', onTouchEnd as EventListener);
+    canvas.value.removeEventListener('click', onCanvasClick as EventListener);
   }
   window.removeEventListener('resize', resizeCanvas);
   foods.value = []; snake.value.cells = [];

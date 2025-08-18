@@ -8,7 +8,6 @@
             <option v-for="n in 12" :key="n" :value="n">{{ n }}</option>
           </select>
         </label>
-        <button class="btn" @click="start">Play</button>
       </div>
     </div>
 
@@ -59,6 +58,7 @@ const player = ref({ x: 260, y: 490, w: 56, h: 10, speed: 10 });
 const keys = ref({ left: false, right: false });
 const enemies = ref<Enemy[]>([]);
 const bullets = ref<Bullet[]>([]);
+const waitingToStart = ref(true);
 
 let loop: number | null = null;
 let gameOver = false;
@@ -71,6 +71,7 @@ function start(){
   spawnWave();
   if(loop) cancelAnimationFrame(loop);
   gameOver=false; last=0; accumulator=0;
+  waitingToStart.value = false;
   // position player based on current canvas size
   player.value.x = Math.max(8, Math.floor((canvasSize - player.value.w)/2));
   player.value.y = Math.max(20, canvasSize - 30);
@@ -225,16 +226,47 @@ function draw(){
   c.fillStyle = '#fbbf24';
   bullets.value.forEach(b=>{ c.fillRect(b.x-2, b.y-10, 4, 10); });
 
-  if(gameOver){
+  if(waitingToStart.value || gameOver){
     c.fillStyle = 'rgba(0,0,0,0.55)';
     c.fillRect(0,0,canvasSize,canvasSize);
     c.fillStyle = '#ffffff';
     c.font = '900 28px system-ui';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText('Oh no :(', canvasSize/2, canvasSize/2 - 16);
-    c.font = '700 18px system-ui';
-    c.fillText(`Your score: ${score.value}`, canvasSize/2, canvasSize/2 + 12);
+    
+    if(waitingToStart.value){
+      c.fillText(`Space Invaders Math`, canvasSize/2, canvasSize/2 - 40);
+      c.font = '700 16px system-ui';
+      c.fillText(`Shoot wrong answers!`, canvasSize/2, canvasSize/2 - 10);
+      
+      // Draw play button
+      const btnWidth = 120;
+      const btnHeight = 40;
+      const btnX = (canvasSize - btnWidth) / 2;
+      const btnY = canvasSize/2 + 20;
+      
+      c.fillStyle = '#ff6d4d';
+      roundRect(c, btnX, btnY, btnWidth, btnHeight, 8, true, false);
+      c.fillStyle = '#ffffff';
+      c.font = '700 16px system-ui';
+      c.fillText('PLAY', canvasSize/2, btnY + btnHeight/2 + 4);
+    } else {
+      c.fillText(`Oh no :(`, canvasSize/2, canvasSize/2 - 16);
+      c.font = '700 18px system-ui';
+      c.fillText(`Your score: ${score.value}`, canvasSize/2, canvasSize/2 + 12);
+      
+      // Draw play again button
+      const btnWidth = 120;
+      const btnHeight = 40;
+      const btnX = (canvasSize - btnWidth) / 2;
+      const btnY = canvasSize/2 + 40;
+      
+      c.fillStyle = '#ff6d4d';
+      roundRect(c, btnX, btnY, btnWidth, btnHeight, 8, true, false);
+      c.fillStyle = '#ffffff';
+      c.font = '700 16px system-ui';
+      c.fillText('PLAY AGAIN', canvasSize/2, btnY + btnHeight/2 + 4);
+    }
   }
 }
 
@@ -245,6 +277,12 @@ function end(){
   try{ user.submitInvadersScore(score.value); } catch {}
   // draw overlay once
   draw();
+}
+
+function resetGame(){
+  gameOver = false;
+  if(loop){ cancelAnimationFrame(loop); loop=null; }
+  start();
 }
 
 function onKeyDown(e: KeyboardEvent){
@@ -263,7 +301,25 @@ function onKeyUp(e: KeyboardEvent){
 
 function shoot(){ bullets.value.push({ x: player.value.x + player.value.w/2, y: player.value.y, vy: -8 }); }
 
-function onTouchStart(e: TouchEvent){ if(!loop || gameOver) return; e.preventDefault(); const t=e.touches[0]; handleTouch(t.clientX, t.clientY); shoot(); }
+function onTouchStart(e: TouchEvent){ 
+  if(waitingToStart.value || gameOver) {
+    e.preventDefault();
+    const t = e.touches[0];
+    const rect = canvas.value!.getBoundingClientRect();
+    const x = t.clientX - rect.left;
+    const y = t.clientY - rect.top;
+    const scale = canvas.value!.width / rect.width;
+    const canvasX = x * scale;
+    const canvasY = y * scale;
+    handleCanvasClick(canvasX, canvasY);
+    return;
+  }
+  if(!loop || gameOver) return; 
+  e.preventDefault(); 
+  const t=e.touches[0]; 
+  handleTouch(t.clientX, t.clientY); 
+  shoot(); 
+}
 function onTouchMove(e: TouchEvent){ if(!loop || gameOver) return; e.preventDefault(); const t=e.touches[0]; handleTouch(t.clientX, t.clientY); }
 function onTouchEnd(e: TouchEvent){ if(!loop || gameOver) return; e.preventDefault(); }
 
@@ -271,6 +327,27 @@ function handleTouch(x:number, _y:number){
   const rect = canvas.value!.getBoundingClientRect();
   const cx = x - rect.left;
   player.value.x = Math.max(8, Math.min(canvasSize - player.value.w - 8, cx - player.value.w/2));
+}
+
+function handleCanvasClick(canvasX: number, canvasY: number){
+  const scale = canvas.value!.width / canvasSize;
+  const x = canvasX / scale;
+  const y = canvasY / scale;
+  
+  if(waitingToStart.value || gameOver){
+    const btnWidth = 120;
+    const btnHeight = 40;
+    const btnX = (canvasSize - btnWidth) / 2;
+    const btnY = waitingToStart.value ? canvasSize/2 + 20 : canvasSize/2 + 40;
+    
+    if(x >= btnX && x <= btnX + btnWidth && y >= btnY && y <= btnY + btnHeight){
+      if(waitingToStart.value){
+        start();
+      } else {
+        resetGame();
+      }
+    }
+  }
 }
 
 function roundRect(ctx:CanvasRenderingContext2D, x:number,y:number,w:number,h:number,r:number,fill:boolean,stroke:boolean){

@@ -1,22 +1,22 @@
 <template>
   <div>
-    <div class="row" style="align-items:center; justify-content:space-between; margin-bottom:12px;">
-      <div style="font-weight:800; font-size:20px;">Learn Mode</div>
+    <header class="row" style="align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <h2 style="font-weight:800; font-size:20px; margin:0;">Learn Mode</h2>
       <div class="flex gap-12">
         <label class="pill">Max table: 
-          <select v-model.number="maxTable" class="pill" style="margin-left:6px; background:transparent; color:var(--text); border:none;">
+          <select v-model.number="maxTable" class="pill" style="margin-left:6px; background:transparent; color:var(--text); border:none;" aria-label="Select maximum table number">
             <option v-for="n in 12" :key="n" :value="n">{{ n }}</option>
           </select>
         </label>
-        <label class="pill">Slow-mo:
-          <select v-model.number="slowMs" class="pill" style="margin-left:6px; background:transparent; color:var(--text); border:none;">
+        <label class="pill">Speed:
+          <select v-model.number="slowMs" class="pill" style="margin-left:6px; background:transparent; color:var(--text); border:none;" aria-label="Select animation speed">
             <option :value="800">Normal</option>
             <option :value="1200">2× slower</option>
             <option :value="1600">3× slower</option>
           </select>
         </label>
       </div>
-    </div>
+    </header>
 
     <div class="grid">
       <MethodCard v-for="m in methods" :key="m.id" :title="m.title" :body="m.body" :pulse="demo?.id===m.id" @try-demo="runDemo(m.id)">
@@ -27,35 +27,36 @@
       </MethodCard>
     </div>
 
-    <div class="inner-card pop" style="margin-top:16px;">
+    <section class="inner-card pop" style="margin-top:16px;">
       <h3>Practice a Table</h3>
       <div class="row">
         <label class="pill">Table
-          <select v-model.number="table" class="pill" style="margin-left:6px; background:transparent; color:var(--text); border:none;">
+          <select v-model.number="table" class="pill" style="margin-left:6px; background:transparent; color:var(--text); border:none;" aria-label="Select table to practice">
             <option v-for="n in maxTable" :key="n" :value="n">{{n}}</option>
           </select>
         </label>
-        <button class="btn" @click="startPractice">Start</button>
-        <div class="pill">Mastery: {{ mastery }}%</div>
+        <button class="btn" @click="startPractice" aria-label="Start practicing the selected table">Start</button>
+        <div class="pill" role="status" aria-live="polite">Mastery: {{ mastery }}%</div>
       </div>
 
-      <div v-if="practicing" class="pop" style="margin-top:10px;">
-        <div style="font-weight:800">What is {{ table }} × {{ curIndex }} ?</div>
+      <div v-if="practicing" class="pop" style="margin-top:10px;" role="region" aria-label="Practice question">
+        <h4 style="font-weight:800; margin:0 0 8px 0;">What is {{ table }} × {{ curIndex }} ?</h4>
         <div class="row" style="align-items:center; margin-top:8px;">
-          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); width:100%;">
+          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); width:100%;" role="group" aria-label="Answer choices">
             <button
               v-for="c in choices"
               :key="c"
               class="btn secondary"
               @click="submitChoice(c)"
+              :aria-label="`Answer ${c}`"
               style="width:100%; aspect-ratio:1/1; padding:0; display:flex; align-items:center; justify-content:center; font-size:clamp(18px, 4vw, 28px);"
             >{{ c }}</button>
           </div>
         </div>
-        <div v-if="feedback==='right'" class="pill" style="margin-top:8px; background:rgba(34,197,94,.12); border-color: rgba(34,197,94,.5); color:var(--good)">Correct!</div>
-        <div v-else-if="feedback==='wrong'" class="pill shake" style="margin-top:8px; background:rgba(239,68,68,.12); border-color: rgba(239,68,68,.5); color:var(--bad)">Oops, try again</div>
+        <div v-if="feedback==='right'" class="pill" style="margin-top:8px; background:rgba(34,197,94,.12); border-color: rgba(34,197,94,.5); color:var(--good)" role="status" aria-live="polite">Correct!</div>
+        <div v-else-if="feedback==='wrong'" class="pill shake" style="margin-top:8px; background:rgba(239,68,68,.12); border-color: rgba(239,68,68,.5); color:var(--bad)" role="status" aria-live="polite">Oops, try again</div>
       </div>
-    </div>
+    </section>
 
     <!-- Table Complete Overlay -->
     <div v-if="showComplete" class="results-overlay pop">

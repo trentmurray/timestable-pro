@@ -1,44 +1,45 @@
 <template>
   <div>
-    <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <div style="font-weight:800; font-size:20px;">Quiz Mode</div>
+    <header class="row" style="justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h2 style="font-weight:800; font-size:20px; margin:0;">Quiz Mode</h2>
       <div class="row">
         <label class="pill">Max table
-          <select v-model.number="maxTable" class="pill" style="margin-left:6px; background:transparent; color:var(--text); border:none;">
+          <select v-model.number="maxTable" class="pill" style="margin-left:6px; background:transparent; color:var(--text); border:none;" aria-label="Select maximum table number">
             <option v-for="n in 12" :key="n" :value="n">{{ n }}</option>
           </select>
         </label>
         <label class="pill">Questions
-          <select v-model.number="total" class="pill" style="margin-left:6px; background:transparent; color:var(--text); border:none;">
+          <select v-model.number="total" class="pill" style="margin-left:6px; background:transparent; color:var(--text); border:none;" aria-label="Select number of questions">
             <option :value="10">10</option>
             <option :value="20">20</option>
             <option :value="30">30</option>
           </select>
         </label>
-        <button class="btn" @click="start">Start</button>
+        <button class="btn" @click="start" aria-label="Start the quiz">Start</button>
       </div>
-    </div>
+    </header>
 
-    <div v-if="started" class="card pop">
+    <section v-if="started" class="card pop" role="region" aria-label="Quiz question">
       <div class="flex gap-12" style="align-items:center; justify-content:space-between;">
-        <div>Q {{ index+1 }} / {{ total }}</div>
-        <div class="pill">Score: {{ score }}</div>
-        <div class="pill" :style="{color: timeLeft<4 ? 'var(--bad)' : 'inherit'}">Time: {{ timeLeft }}s</div>
+        <div role="status" aria-live="polite">Q {{ index+1 }} / {{ total }}</div>
+        <div class="pill" role="status" aria-live="polite">Score: {{ score }}</div>
+        <div class="pill" :style="{color: timeLeft<4 ? 'var(--bad)' : 'inherit'}" role="status" aria-live="polite">Time: {{ timeLeft }}s</div>
       </div>
 
-      <div style="font-size:24px; font-weight:900; margin:12px 0;">{{ q.text }}</div>
-      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));">
+      <h3 style="font-size:24px; font-weight:900; margin:12px 0;">{{ q.text }}</h3>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));" role="group" aria-label="Answer choices">
         <button
           v-for="c in choices"
           :key="c"
           class="btn secondary"
           @click="submitChoice(c)"
+          :aria-label="`Answer ${c}`"
           style="width:100%; aspect-ratio:1/1; padding:0; display:flex; align-items:center; justify-content:center; font-size:clamp(18px, 3.4vw, 26px);"
         >{{ c }}</button>
       </div>
-      <div v-if="flash==='right'" class="pill" style="margin-top:8px; background:rgba(34,197,94,.12); border-color: rgba(34,197,94,.5); color:var(--good)">Nice!</div>
-      <div v-else-if="flash==='wrong'" class="pill shake" style="margin-top:8px; background:rgba(239,68,68,.12); border-color: rgba(239,68,68,.5); color:var(--bad)">Not quite ({{q.answer}})</div>
-    </div>
+      <div v-if="flash==='right'" class="pill" style="margin-top:8px; background:rgba(34,197,94,.12); border-color: rgba(34,197,94,.5); color:var(--good)" role="status" aria-live="polite">Nice!</div>
+      <div v-else-if="flash==='wrong'" class="pill shake" style="margin-top:8px; background:rgba(239,68,68,.12); border-color: rgba(239,68,68,.5); color:var(--bad)" role="status" aria-live="polite">Not quite ({{q.answer}})</div>
+    </section>
 
     <div v-else class="muted">Press Start to begin a timed challenge.</div>
 

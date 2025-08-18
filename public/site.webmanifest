@@ -1,0 +1,20 @@
+{
+  "name": "Times Table Trainer",
+  "short_name": "Times Tables",
+  "description": "Interactive times table learning app with fun games for kids 8-12",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffaf0",
+  "theme_color": "#ff6d4d",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["education", "games"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
